@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locked In — Habit Tracker</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Locked In">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23141412'/%3E%3Crect x='22' y='22' width='56' height='56' rx='8' fill='none' stroke='%237C8A5C' stroke-width='6'/%3E%3Cpath d='M32 50 L45 63 L70 35' fill='none' stroke='%237C8A5C' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23141412'/%3E%3Crect x='22' y='22' width='56' height='56' rx='8' fill='none' stroke='%237C8A5C' stroke-width='6'/%3E%3Cpath d='M32 50 L45 63 L70 35' fill='none' stroke='%237C8A5C' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #141412;
+    --surface: #1B1B18;
+    --surface-2: #202019;
+    --border: #2E2E28;
+    --text: #EDEAE2;
+    --text-muted: #8C897C;
+    --accent: #7C8A5C;
+    --accent-dim: #5E6A45;
+    --today: #C9A227;
+    --danger: #B5654F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:28px 16px 40px;}
+
+  header{margin-bottom:22px;}
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 4px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:28px;
+    letter-spacing:0.01em;
+    margin:0 0 6px;
+    text-transform:uppercase;
+  }
+  .week-range{
+    font-size:13px;
+    color:var(--text-muted);
+  }
+
+  .streak-row{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .streak-pill{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:6px 10px;
+    font-size:12px;
+    color:var(--text-muted);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .streak-pill b{color:var(--text);font-weight:600;}
+
+  .board{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    overflow:hidden;
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns: 1fr repeat(7, 34px);
+    align-items:center;
+    border-bottom:1px solid var(--border);
+  }
+  .row:last-child{border-bottom:none;}
+  .row.head{
+    background:var(--surface-2);
+    padding:0;
+  }
+  .row.head .daycell{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    letter-spacing:0.05em;
+    color:var(--text-muted);
+    text-align:center;
+    padding:10px 0 8px;
+    position:relative;
+  }
+  .row.head .daycell.today{color:var(--today);}
+  .row.head .daycell .datenum{
+    display:block;
+    font-size:10px;
+    color:var(--text-muted);
+    font-family:'Inter',sans-serif;
+    margin-top:2px;
+  }
+  .row.head .daycell.today .datenum{color:var(--today);}
+  .row.head .daynamecell{padding-left:14px;}
+
+  .habit-name{
+    padding:10px 6px 10px 14px;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    min-width:0;
+  }
+  .habit-name span{
+    line-height:1.25;
+    word-break:break-word;
+  }
+  .habit-name span.hname{
+    cursor:pointer;
+    border-bottom:1px dashed transparent;
+  }
+  .habit-name span.hname:hover{
+    border-bottom-color:var(--text-muted);
+  }
+  .del-btn{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    padding:2px 4px;
+    flex-shrink:0;
+    opacity:0.5;
+  }
+  .del-btn:hover{opacity:1;color:var(--danger);}
+
+  .daycell{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:44px;
+  }
+  .daycell.today-col{
+    box-shadow: inset 0 2px 0 var(--today);
+  }
+
+  .box{
+    width:22px;
+    height:22px;
+    border-radius:4px;
+    border:1.5px solid var(--border);
+    background:transparent;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    transition:transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  }
+  .box:active{transform:scale(0.9);}
+  .box.checked{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .box svg{
+    width:13px;height:13px;
+    stroke:#141412;
+    stroke-width:3;
+    fill:none;
+    opacity:0;
+    transform:scale(0.6);
+    transition:opacity 0.1s ease, transform 0.15s ease;
+  }
+  .box.checked svg{opacity:1;transform:scale(1);}
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    padding:14px;
+    border-top:1px solid var(--border);
+    background:var(--surface-2);
+  }
+  .add-row input{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text);
+    padding:9px 11px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .add-row input:focus{outline:none;border-color:var(--accent-dim);}
+  .add-row button{
+    background:var(--accent);
+    color:#141412;
+    border:none;
+    border-radius:4px;
+    padding:0 16px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .add-row button:disabled{opacity:0.4;cursor:default;}
+
+  .empty{
+    padding:30px 16px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:14px;
+  }
+
+  .foot{
+    margin-top:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .foot .status{
+    font-size:11px;
+    color:var(--text-muted);
+  }
+  .reset-link{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:11px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .reset-link:hover{color:var(--danger);}
+
+  @media (max-width:420px){
+    .row{grid-template-columns: 1fr repeat(7, 30px);}
+    .box{width:20px;height:20px;}
+    h1{font-size:23px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Week of Discipline</p>
+    <h1>Locked In</h1>
+    <div class="week-range" id="weekRange">Loading…</div>
+    <div class="streak-row" id="streakRow"></div>
+  </header>
+
+  <div class="board" id="board">
+    <div class="empty">Loading your tracker…</div>
+  </div>
+
+  <div class="foot">
+    <div class="status" id="statusMsg">&nbsp;</div>
+    <button class="reset-link" id="resetBtn">Clear all data</button>
+  </div>
+</div>
+
+<script>
+const DAY_LETTERS = ['M','T','W','T','F','S','S'];
+const DEFAULT_HABITS = [
+  'Read Bible',
+  'Brush teeth',
+  'Drink half gallon water',
+  '150g protein',
+  'Workout',
+  'Walk 1 hour',
+  'Walk the dogs'
+];
+
+let habits = [];
+let weekData = {}; // { 'YYYY-MM-DD': { habitId: true } }
+let weekKey = '';
+let weekDates = [];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmt(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function getMonday(d){
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+function uid(){
+  return 'h_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function computeWeek(){
+  const today = new Date();
+  const monday = getMonday(today);
+  weekDates = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    weekDates.push(d);
+  }
+  weekKey = 'checkins:' + fmt(monday);
+  const last = weekDates[6];
+  const opts = {month:'short', day:'numeric'};
+  document.getElementById('weekRange').textContent =
+    monday.toLocaleDateString(undefined,opts) + ' – ' + last.toLocaleDateString(undefined,opts);
+}
+
+function loadData(){
+  computeWeek();
+  try{
+    const h = localStorage.getItem('tracker-habits');
+    habits = h ? JSON.parse(h) : DEFAULT_HABITS.map(name => ({id: uid(), name}));
+    if(!h){
+      localStorage.setItem('tracker-habits', JSON.stringify(habits));
+    }
+  } catch(e){
+    habits = DEFAULT_HABITS.map(name => ({id: uid(), name}));
+  }
+
+  try{
+    const w = localStorage.getItem(weekKey);
+    weekData = w ? JSON.parse(w) : {};
+  } catch(e){
+    weekData = {};
+  }
+
+  render();
+}
+
+function saveHabits(){
+  try{
+    localStorage.setItem('tracker-habits', JSON.stringify(habits));
+  } catch(e){
+    setStatus('Could not save habit list.');
+  }
+}
+
+function saveWeek(){
+  try{
+    localStorage.setItem(weekKey, JSON.stringify(weekData));
+    setStatus('Saved');
+    setTimeout(()=>setStatus(''), 1200);
+  } catch(e){
+    setStatus('Save failed: ' + (e && e.message ? e.message : 'unknown error'));
+  }
+}
+
+function setStatus(msg){
+  document.getElementById('statusMsg').textContent = msg || '\u00A0';
+}
+
+function toggle(dateStr, habitId){
+  if(!weekData[dateStr]) weekData[dateStr] = {};
+  if(weekData[dateStr][habitId]){
+    delete weekData[dateStr][habitId];
+  } else {
+    weekData[dateStr][habitId] = true;
+  }
+  saveWeek();
+  renderStreaks();
+}
+
+function removeHabit(id){
+  habits = habits.filter(h => h.id !== id);
+  saveHabits();
+  render();
+}
+
+function addHabit(name){
+  name = name.trim();
+  if(!name) return;
+  habits.push({id: uid(), name});
+  saveHabits();
+  render();
+}
+
+function renderStreaks(){
+  const row = document.getElementById('streakRow');
+  row.innerHTML = '';
+  const todayStr = fmt(new Date());
+  let doneToday = 0;
+  habits.forEach(h => {
+    if(weekData[todayStr] && weekData[todayStr][h.id]) doneToday++;
+  });
+  const pill1 = document.createElement('div');
+  pill1.className = 'streak-pill';
+  pill1.innerHTML = `<b>${doneToday}/${habits.length}</b> today`;
+  row.appendChild(pill1);
+
+  let weekChecks = 0;
+  weekDates.forEach(d => {
+    const ds = fmt(d);
+    if(weekData[ds]) weekChecks += Object.keys(weekData[ds]).length;
+  });
+  const pill2 = document.createElement('div');
+  pill2.className = 'streak-pill';
+  pill2.innerHTML = `<b>${weekChecks}</b> checks this week`;
+  row.appendChild(pill2);
+}
+
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  if(habits.length === 0){
+    board.innerHTML = '<div class="empty">No habits yet. Add your first one below.</div>';
+  } else {
+    const todayStr = fmt(new Date());
+
+    // header row
+    const head = document.createElement('div');
+    head.className = 'row head';
+    let headHtml = '<div class="daynamecell"></div>';
+    weekDates.forEach((d,i) => {
+      const isToday = fmt(d) === todayStr;
+      headHtml += `<div class="daycell ${isToday?'today':''}">${DAY_LETTERS[i]}<span class="datenum">${d.getDate()}</span></div>`;
+    });
+    head.innerHTML = headHtml;
+    board.appendChild(head);
+
+    habits.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      let html = `<div class="habit-name"><span class="hname" data-id="${h.id}" title="Tap to rename">${escapeHtml(h.name)}</span><button class="del-btn" data-del="${h.id}" title="Remove habit">×</button></div>`;
+      weekDates.forEach(d => {
+        const ds = fmt(d);
+        const isToday = ds === todayStr;
+        const checked = !!(weekData[ds] && weekData[ds][h.id]);
+        html += `<div class="daycell ${isToday?'today-col':''}">
+          <button class="box ${checked?'checked':''}" data-date="${ds}" data-habit="${h.id}">
+            <svg viewBox="0 0 24 24"><polyline points="4,13 9,18 20,6"/></svg>
+          </button>
+        </div>`;
+      });
+      row.innerHTML = html;
+      board.appendChild(row);
+    });
+  }
+
+  const addRow = document.createElement('div');
+  addRow.className = 'add-row';
+  addRow.innerHTML = `
+    <input type="text" id="newHabitInput" placeholder="Add a habit…" maxlength="60">
+    <button id="addBtn">Add</button>
+  `;
+  board.appendChild(addRow);
+
+  // wire up events
+  board.querySelectorAll('.box').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('checked');
+      toggle(btn.dataset.date, btn.dataset.habit);
+    });
+  });
+  board.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => removeHabit(btn.dataset.del));
+  });
+  board.querySelectorAll('.hname').forEach(span => {
+    span.addEventListener('click', () => startRename(span));
+  });
+
+  const input = document.getElementById('newHabitInput');
+  const addBtn = document.getElementById('addBtn');
+  addBtn.addEventListener('click', () => {
+    addHabit(input.value);
+    input.value = '';
+  });
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      addHabit(input.value);
+      input.value = '';
+    }
+  });
+
+  renderStreaks();
+}
+
+function startRename(span){
+  const id = span.dataset.id;
+  const current = habits.find(h => h.id === id);
+  if(!current) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = current.name;
+  input.maxLength = 60;
+  input.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--accent-dim);border-radius:3px;color:var(--text);font-size:13px;padding:3px 6px;font-family:Inter,sans-serif;';
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+  function commit(){
+    const val = input.value.trim();
+    if(val) current.name = val;
+    saveHabits();
+    render();
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') input.blur();
+    if(e.key === 'Escape'){ input.value = current.name; input.blur(); }
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(!confirm('Clear all habits and check-ins? This cannot be undone.')) return;
+  habits = [];
+  weekData = {};
+  try{
+    localStorage.setItem('tracker-habits', JSON.stringify([]));
+    localStorage.setItem(weekKey, JSON.stringify({}));
+  } catch(e){}
+  render();
+});
+
+loadData();
+</script>
+</body>
+</html>
